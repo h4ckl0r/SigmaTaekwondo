@@ -36,8 +36,25 @@ export default function RegisterPage() {
       return
     }
 
-    toast.success('Đăng ký thành công! Vui lòng đăng nhập.')
-    router.push('/login')
+    // Since Confirm Email is disabled, data.user is immediately signed in.
+    if (data?.user) {
+      try {
+        await fetch('/api/auth/register-profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+             id: data.user.id,
+             full_name: fullName,
+             email: email
+          })
+        })
+      } catch (err) {
+        console.error('Failed to auto-create profile', err)
+      }
+    }
+
+    toast.success('Đăng ký thành công! Đang chuyển hướng...')
+    router.push('/dashboard')
   }
 
   return (

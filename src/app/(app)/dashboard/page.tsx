@@ -5,14 +5,6 @@ import { Users, Shield, Trophy, Medal } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { toast } from 'react-toastify'
 
-const dummyChartData = [
-  { name: 'CLB Hà Nội', vdv: 120 },
-  { name: 'CLB TP.HCM', vdv: 98 },
-  { name: 'Đà Nẵng', vdv: 86 },
-  { name: 'Cần Thơ', vdv: 45 },
-  { name: 'Hải Phòng', vdv: 32 },
-]
-
 export default function DashboardPage() {
   const [stats, setStats] = useState({
     totalAthletes: 0,
@@ -20,16 +12,30 @@ export default function DashboardPage() {
     totalCategories: 0,
     totalMatches: 0
   })
+  const [chartData, setChartData] = useState<any[]>([])
+  const [medalStandings, setMedalStandings] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-  // Thường fetch logic ở đây, mock tạm cho UI demo
   useEffect(() => {
-    setStats({
-      totalAthletes: 381,
-      totalUnits: 15,
-      totalCategories: 42,
-      totalMatches: 120
-    })
+    const fetchDashboard = async () => {
+      try {
+        const res = await fetch('/api/dashboard')
+        if (res.ok) {
+          const data = await res.json()
+          if (data.stats) setStats(data.stats)
+          if (data.chartData) setChartData(data.chartData)
+          if (data.medalStandings) setMedalStandings(data.medalStandings)
+        }
+      } catch (err) {
+        toast.error('Lỗi tải dữ liệu dashboard')
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchDashboard()
   }, [])
+
+  if (loading) return <div className="p-8 text-center text-slate-500">Đang tải biểu mẫu...</div>
 
   return (
     <div className="space-y-6">
@@ -93,7 +99,7 @@ export default function DashboardPage() {
           <div className="h-80 w-full font-sans">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={dummyChartData}
+                data={chartData}
                 margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
@@ -120,27 +126,21 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                <tr className="border-b border-slate-100 hover:bg-slate-50">
-                  <td className="px-4 py-3 font-medium text-slate-800">CLB Hà Nội</td>
-                  <td className="px-4 py-3 text-center font-semibold text-slate-700">12</td>
-                  <td className="px-4 py-3 text-center font-semibold text-slate-700">8</td>
-                  <td className="px-4 py-3 text-center font-semibold text-slate-700">5</td>
-                  <td className="px-4 py-3 text-right font-bold text-red-600">25</td>
-                </tr>
-                <tr className="border-b border-slate-100 hover:bg-slate-50">
-                  <td className="px-4 py-3 font-medium text-slate-800">CLB TP.HCM</td>
-                  <td className="px-4 py-3 text-center font-semibold text-slate-700">9</td>
-                  <td className="px-4 py-3 text-center font-semibold text-slate-700">11</td>
-                  <td className="px-4 py-3 text-center font-semibold text-slate-700">7</td>
-                  <td className="px-4 py-3 text-right font-bold text-red-600">27</td>
-                </tr>
-                <tr className="hover:bg-slate-50">
-                  <td className="px-4 py-3 font-medium text-slate-800">Đà Nẵng</td>
-                  <td className="px-4 py-3 text-center font-semibold text-slate-700">5</td>
-                  <td className="px-4 py-3 text-center font-semibold text-slate-700">4</td>
-                  <td className="px-4 py-3 text-center font-semibold text-slate-700">8</td>
-                  <td className="px-4 py-3 text-right font-bold text-red-600">17</td>
-                </tr>
+                {medalStandings.length > 0 ? medalStandings.map((unit, idx) => (
+                  <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50">
+                    <td className="px-4 py-3 font-medium text-slate-800">{unit.name}</td>
+                    <td className="px-4 py-3 text-center font-semibold text-slate-700">{unit.gold}</td>
+                    <td className="px-4 py-3 text-center font-semibold text-slate-700">{unit.silver}</td>
+                    <td className="px-4 py-3 text-center font-semibold text-slate-700">{unit.bronze}</td>
+                    <td className="px-4 py-3 text-right font-bold text-red-600">{unit.total}</td>
+                  </tr>
+                )) : (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
+                      Chưa có dữ liệu huy chương (Cần có giải đấu đã cập nhật xếp hạng)
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

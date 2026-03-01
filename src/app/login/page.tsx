@@ -85,7 +85,7 @@ export default function LoginPage() {
               <input type="checkbox" className="mr-2 rounded border-gray-300 text-red-600 focus:ring-red-500" />
               Ghi nhớ đăng nhập
             </label>
-            <Link href="#" className="text-red-600 hover:underline">Quên mật khẩu?</Link>
+            <Link href="/forgot-password" className="text-red-600 hover:underline">Quên mật khẩu?</Link>
           </div>
 
           <button 
@@ -97,9 +97,9 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* <p className="text-center text-sm text-slate-600 mt-6">
+        <p className="text-center text-sm text-slate-600 mt-6">
           Chưa có tài khoản? <Link href="/register" className="text-red-600 font-medium hover:underline">Đăng ký ngay</Link>
-        </p> */}
+        </p>
       </div>
     </div>
   )

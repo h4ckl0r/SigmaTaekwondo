@@ -9,7 +9,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <Provider store={store}>
       {children}
-      <ToastContainer position="bottom-right" autoClose={3000} />
+      <ToastContainer position="top-left" autoClose={3000} />
     </Provider>
   )
 }

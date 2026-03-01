@@ -5,6 +5,8 @@ import { Plus, Search, Edit2, Trash2, Filter, Eye } from 'lucide-react'
 import { toast } from 'react-toastify'
 import { format } from 'date-fns'
 import Link from 'next/link'
+import { useSelector } from 'react-redux'
+import { RootState } from '@/lib/store'
 
 type Category = {
   id: string
@@ -21,6 +23,7 @@ type Category = {
 }
 
 export default function CategoriesPage() {
+  const { role } = useSelector((state: RootState) => state.auth)
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -130,9 +133,11 @@ export default function CategoriesPage() {
           <h1 className="text-2xl font-bold text-slate-800">Nội dung thi đấu</h1>
           <p className="text-slate-500 text-sm">Quản lý các hạng cân, lứa tuổi và nội dung quyền</p>
         </div>
-        <button onClick={() => openModal()} className="btn-primary flex items-center">
-          <Plus className="w-5 h-5 mr-1" /> Thêm Nội dung
-        </button>
+        {role !== 'VIEWER' && (
+          <button onClick={() => openModal()} className="btn-primary flex items-center">
+            <Plus className="w-5 h-5 mr-1" /> Thêm Nội dung
+          </button>
+        )}
       </div>
 
       <div className="card space-y-4">
@@ -228,14 +233,16 @@ export default function CategoriesPage() {
                   <Link href={`/categories/${cat.id}`} className="text-sm font-medium text-red-600 hover:text-red-700 flex items-center">
                     <Eye className="w-4 h-4 mr-1" /> Chi tiết
                   </Link>
-                  <div className="flex gap-3">
-                    <button onClick={() => openModal(cat)} className="text-slate-400 hover:text-blue-600">
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button onClick={() => handleDelete(cat.id, cat.category_name)} className="text-slate-400 hover:text-red-600">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+                  {role !== 'VIEWER' && (
+                    <div className="flex gap-3">
+                      <button onClick={() => openModal(cat)} className="text-slate-400 hover:text-blue-600">
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => handleDelete(cat.id, cat.category_name)} className="text-slate-400 hover:text-red-600">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))

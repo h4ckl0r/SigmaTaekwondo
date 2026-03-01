@@ -5,6 +5,8 @@ import { Plus, Users, ArrowLeft, Trash2, Shuffle, GitMerge } from 'lucide-react'
 import { toast } from 'react-toastify'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
+import { useSelector } from 'react-redux'
+import { RootState } from '@/lib/store'
 
 type Category = {
   id: string
@@ -25,6 +27,7 @@ type Category = {
 type Athlete = { id: string, full_name: string, gender?: string, unit: { name: string } }
 
 export default function CategoryDetailPage() {
+  const { role } = useSelector((state: RootState) => state.auth)
   const { id } = useParams()
   const router = useRouter()
   const [category, setCategory] = useState<Category | null>(null)
@@ -155,24 +158,28 @@ export default function CategoryDetailPage() {
         
         {category.status === 'READY' ? (
           <div className="flex gap-2">
-            <button 
-              onClick={() => {
-                setManualOrder(new Array(maxAthletes).fill(''))
-                setIsManualBracketOpen(true)
-              }}
-              disabled={isGenerating || currentAthletes < 2}
-              className="btn-secondary flex items-center disabled:opacity-50"
-            >
-              <GitMerge className="w-4 h-4 mr-2" /> Tạo Thủ Công
-            </button>
-            <button 
-              onClick={() => handleGenerateBracket()} 
-              disabled={isGenerating || currentAthletes < 2}
-              className="btn-primary flex items-center bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300"
-            >
-              <Shuffle className="w-4 h-4 mr-2" /> 
-              {isGenerating ? 'Đang xếp lịch...' : 'Tạo Lịch Ngẫu Nhiên'}
-            </button>
+            {role !== 'VIEWER' && (
+              <>
+                <button 
+                  onClick={() => {
+                    setManualOrder(new Array(maxAthletes).fill(''))
+                    setIsManualBracketOpen(true)
+                  }}
+                  disabled={isGenerating || currentAthletes < 2}
+                  className="btn-secondary flex items-center disabled:opacity-50"
+                >
+                  <GitMerge className="w-4 h-4 mr-2" /> Tạo Thủ Công
+                </button>
+                <button 
+                  onClick={() => handleGenerateBracket()} 
+                  disabled={isGenerating || currentAthletes < 2}
+                  className="btn-primary flex items-center bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300"
+                >
+                  <Shuffle className="w-4 h-4 mr-2" /> 
+                  {isGenerating ? 'Đang xếp lịch...' : 'Tạo Lịch Ngẫu Nhiên'}
+                </button>
+              </>
+            )}
           </div>
         ) : (
           <Link href={`/categories/${id}/bracket`} className="btn-primary flex items-center bg-green-600 hover:bg-green-700">
@@ -210,7 +217,7 @@ export default function CategoryDetailPage() {
                       <td className="px-4 py-3 font-medium text-slate-800">{reg.athlete.full_name}</td>
                       <td className="px-4 py-3 text-slate-600">{reg.athlete.unit.name}</td>
                       <td className="px-4 py-3 text-right">
-                        {category.status === 'READY' && (
+                        {category.status === 'READY' && role !== 'VIEWER' && (
                           <button className="text-slate-400 hover:text-red-600 p-1">
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -245,13 +252,19 @@ export default function CategoryDetailPage() {
             </div>
 
             {category.status === 'READY' ? (
-              <button 
-                onClick={() => setIsModalOpen(true)}
-                disabled={currentAthletes >= maxAthletes}
-                className="w-full btn-secondary flex items-center justify-center disabled:opacity-50"
-              >
-                <Plus className="w-4 h-4 mr-1" /> Thêm VĐV vào nội dung
-              </button>
+              role !== 'VIEWER' ? (
+                <button 
+                  onClick={() => setIsModalOpen(true)}
+                  disabled={currentAthletes >= maxAthletes}
+                  className="w-full btn-secondary flex items-center justify-center disabled:opacity-50"
+                >
+                  <Plus className="w-4 h-4 mr-1" /> Thêm VĐV vào nội dung
+                </button>
+              ) : (
+                <p className="text-sm text-slate-500 text-center bg-slate-50 p-3 rounded-lg border border-slate-200">
+                  Bạn không có quyền quản lý VĐV
+                </p>
+              )
             ) : (
               <p className="text-sm text-slate-500 text-center bg-slate-50 p-3 rounded-lg border border-slate-200">
                 Không thể thêm VĐV vì giải đấu đã bắt đầu hoặc hoàn tất.
