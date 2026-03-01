@@ -1,0 +1,132 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/lib/generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["public", "auth"]
+}
+
+enum user_role {
+  ADMIN
+  ORGANIZER
+  REFEREE
+  VIEWER
+}
+
+enum gender_enum {
+  NAM
+  NU
+  HONHOP
+  KHAC
+}
+
+enum type_enum {
+  KYORUGI
+  POOMSAE
+  SKILL
+}
+
+enum bracket_type_enum {
+  BRACKET
+  ROUND_ROBIN
+}
+
+enum total_athletes_enum {
+  A4 @map("4")
+  A8 @map("8")
+  A16 @map("16")
+  A32 @map("32")
+}
+
+enum category_status_enum {
+  READY
+  PROGRESS
+  FINISHED
+}
+
+enum match_status_enum {
+  PENDING
+  ONGOING
+  FINISHED
+  CANCELLED
+}
+
+model profiles {
+  id         String    @id @db.Uuid
+  role       user_role @default(VIEWER)
+  full_name  String?
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at DateTime  @default(now()) @db.Timestamptz(6)
+}
+
+model units {
+  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String     @unique
+  created_at DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at DateTime   @default(now()) @db.Timestamptz(6)
+  athletes   athletes[]
+}
+
+model categories {
+  id             String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  category_name  String               @unique
+  gender         gender_enum
+  type           type_enum
+  group_age      String
+  bracket_type   bracket_type_enum
+  total_athletes total_athletes_enum
+  status         category_status_enum @default(READY)
+  start_date     DateTime             @db.Timestamptz(6)
+  end_date       DateTime             @db.Timestamptz(6)
+  created_at     DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime             @default(now()) @db.Timestamptz(6)
+  registrations  registrations[]
+  matches        matches[]
+}
+
+model athletes {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  full_name     String
+  unit_id       String          @db.Uuid
+  gender        gender_enum
+  birthday      DateTime        @db.Date
+  created_at    DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime        @default(now()) @db.Timestamptz(6)
+  unit          units           @relation(fields: [unit_id], references: [id], onDelete: Cascade)
+  registrations registrations[]
+}
+
+model registrations {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  category_id       String    @db.Uuid
+  athlete_id        String    @db.Uuid
+  final_score       Decimal?  @db.Decimal(5, 2)
+  final_rank        Int?
+  registration_date DateTime  @default(now()) @db.Timestamptz(6)
+  category          categories @relation(fields: [category_id], references: [id], onDelete: Cascade)
+  athlete           athletes   @relation(fields: [athlete_id], references: [id], onDelete: Cascade)
+  matches_as_player1 matches[]  @relation("player1")
+  matches_as_player2 matches[]  @relation("player2")
+  matches_won        matches[]  @relation("winner")
+
+  @@unique([category_id, athlete_id])
+}
+
+model matches {
+  id                       String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  category_id              String            @db.Uuid
+  athlete1_registration_id String?           @db.Uuid
+  athlete2_registration_id String?           @db.Uuid
+  winner_id                String?           @db.Uuid
+  round                    Int
+  match_order              Int
+  score1                   Decimal?          @db.Decimal(5, 2)
+  score2                   Decimal?          @db.Decimal(5, 2)
+  status                   match_status_enum @default(PENDING)
+  category                 categories        @relation(fields: [category_id], references: [id], onDelete: Cascade)
+  player1                  registrations?    @relation("player1", fields: [athlete1_registration_id], references: [id], onDelete: Cascade)
+  player2                  registrations?    @relation("player2", fields: [athlete2_registration_id], references: [id], onDelete: Cascade)
+  winner                   registrations?    @relation("winner", fields: [winner_id], references: [id], onDelete: Cascade)
+}
