@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
-export const dynamic = 'force-dynamic'
+export const revalidate = 60 // Cache for 60 seconds (1 minute)
 import { getUserAndRole } from '@/lib/auth'
 
 export async function GET(req: Request) {
