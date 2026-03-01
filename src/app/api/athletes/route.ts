@@ -10,7 +10,7 @@ export async function GET(req: Request) {
   const fetchAll = searchParams.get('fetchAll') === 'true'
   const page = parseInt(searchParams.get('page') || '1')
   const limit = fetchAll ? undefined : 50
-  const skip = fetchAll ? undefined : (page - 1) * limit
+  const skip = fetchAll ? undefined : (page - 1) * (limit || 50)
 
   try {
     const whereClause: any = {}
